@@ -11,14 +11,10 @@ const socketMiddleware = (socket , next) => {
         }
 
     try{
-        const decoded = jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-        if (err) {
-            return response(res, 401, "Unauthorized Access");
-        }
-        socket.user = decoded;
+        const decode = jwt.verify(token, process.env.JWT_SECRET)
+        socket.user = decode;
         next();
-    });
-} catch (error) {
+    }catch (error) {
     console.error("Error in authMiddleware:", error);
     return response(res, 500, "Internal Server Error");
 }

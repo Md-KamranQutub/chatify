@@ -89,10 +89,10 @@ const verifyOtp = async(req, res) => {
             }
         }
             const token = generateToken(user._id);
-            res.cookie("auth_token", token, {
-                httpOnly: true,
-                maxAge: 365 * 24 * 60 * 60 * 1000, // 1 year
-            });
+            // res.cookie("auth_token", token, {
+            //     httpOnly: true,
+            //     maxAge: 365 * 24 * 60 * 60 * 1000, // 1 year
+            // });
             return response(res, 200, "OTP verified successfully", { token , user });
     } catch (error) {
         console.error("Error in verifyOtp controller:", error);

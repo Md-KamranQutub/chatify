@@ -22,6 +22,7 @@ const initializeSocket = (server) =>
 
    //middleware
    io.use(socketMiddleware);
+   
    io.on("connection", (socket) => {
     console.log("User connected with socket ID:", socket.id);
 
