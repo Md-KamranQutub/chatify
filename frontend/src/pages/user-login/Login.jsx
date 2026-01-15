@@ -346,9 +346,9 @@ const Login = () => {
                       </div>
                     )}
                   </div>
-                  <div className="phoneNumber w-2/3 h-[40px] text-black">
+                  <div className="phoneNumber w-2/3 h-[40px]  text-black">
                     <input
-                      className="h-[40px] w-full px-4 rounded-md"
+                      className="h-[40px] w-full bg-white px-4 rounded-md"
                       type="text"
                       {...loginRegister("phoneNumber")}
                       value={phoneNumber}
@@ -369,7 +369,7 @@ const Login = () => {
                 </div>
                 <div className="email w-full text-black">
                   <input
-                    className="h-[40px] px-4 rounded-md w-full"
+                    className="h-[40px] px-4 rounded-md w-full bg-white"
                     type="email"
                     {...loginRegister("email")}
                     value={email}

@@ -10,14 +10,14 @@ import { logout } from "../../services/user.service";
 const Setting = () => {
   const [isThemeDialogueOpen, setIsThemeDialogOpen] = useState(false);
   const { theme } = useThemeStore();
-  const { currentUser, clearUser } = useUserStore();
+  const { currentUser, clearCurrentUser } = useUserStore();
   const toggleThemeDialogue = () => {
     setIsThemeDialogOpen(!isThemeDialogueOpen);
   };
   const handleLogOut = async () => {
     try {
       await logout();
-      clearUser();
+      clearCurrentUser();
       toast.success("User logged out successfully");
     } catch (error) {
       console.error("Failed to logout ", error);
