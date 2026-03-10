@@ -131,14 +131,14 @@ const Login = () => {
       console.log(response);
       if (response.status === "success") {
         const token = response.data?.token;
-        localStorage.setItem("auth_token" , token);
+        localStorage.setItem("auth_token", token);
         toast.success("OTP verified succesfully");
         const newUser = response.data?.user;
         if (newUser?.username && newUser?.profilePicture) {
           setCurrentUser(newUser);
           // navigate("/");
           toast.success("Welcome back to Chatify");
-          console.log("This is new User " , newUser);
+          console.log("This is new User ", newUser);
           resetLoginStore();
         } else {
           setStep(3);
@@ -209,11 +209,7 @@ const Login = () => {
     watch,
   } = useForm({ resolver: yupResolver(profileValidationSchema) });
 
-  const {
-    step,
-    setStep,
-    resetLoginStore,
-  } = useLoginStore();
+  const { step, setStep, resetLoginStore } = useLoginStore();
 
   const filteredCountries = countries.filter((country) => {
     //Filters country that contains searchTerm
@@ -233,9 +229,8 @@ const Login = () => {
   const ProgressBar = () => {
     return (
       <div
-        className={` w-[80%] h-4 ${
-          theme === "light" ? "bg-pink-100" : "bg-gray-600"
-        } rounded-full`}
+        className={` w-[80%] h-4 ${theme === "light" ? "bg-pink-100" : "bg-gray-600"
+          } rounded-full`}
       >
         <motion.div
           initial={{ width: "0%" }}
@@ -243,9 +238,8 @@ const Login = () => {
             width: `${(step / 3) * 100}%`,
             transition: { duration: 0.2, easeInOut },
           }}
-          className={`h-full w-full ${
-            theme === "light" ? "bg-pink-600" : "bg-gray-900"
-          } rounded-full`}
+          className={`h-full w-full ${theme === "light" ? "bg-pink-600" : "bg-gray-900"
+            } rounded-full`}
         ></motion.div>
       </div>
     );
@@ -253,9 +247,8 @@ const Login = () => {
 
   return (
     <div
-      className={` ${
-        theme === "light" ? "bg-pink-200" : "bg-gray-800"
-      } min-h-screen min-w-screen flex justify-center items-center text-black`}
+      className={` ${theme === "light" ? "bg-pink-200" : "bg-gray-800"
+        } min-h-screen min-w-screen flex justify-center items-center text-black`}
     >
       <motion.div
         initial={{ opacity: 0 }}
@@ -263,9 +256,8 @@ const Login = () => {
           opacity: 1,
           transition: { duration: 0.6, delay: 0.3, ease: easeInOut },
         }}
-        className={` rounded-md z-10 shadow-lg shadow-black ${
-          theme === "light" ? "bg-pink-300" : "bg-gray-600"
-        } text-white`}
+        className={` rounded-lg z-10 shadow-lg shadow-black ${theme === "light" ? "bg-[#FFFBFD]" : "bg-gray-600"
+          } text-white`}
       >
         <motion.div
           initial={{ scale: 0 }}
@@ -278,7 +270,7 @@ const Login = () => {
               duration: 0.8,
             },
           }}
-          className="flex flex-col justify-center items-center space-y-6 mx-6"
+          className="flex flex-col justify-center items-center space-y-5 mx-10 my-6"
         >
           <div className="mt-4 w-fit bg-black rounded-full flex items-center justify-center">
             <img
@@ -297,7 +289,10 @@ const Login = () => {
               className="space-y-4"
               onSubmit={handleSubmit(handleLoginSubmit)}
             >
-              <p>Enter your phone number to recieve an OTP</p>
+              <h1 className="font-bold text-xl text-[#1C1C2E]">
+                Enter Your Email to Log In
+              </h1>
+              {/* <p>Enter your phone number to recieve an OTP</p>
               <div className="relative w-full">
                 <div className="flex w-full gap-2">
                   <div className="relative w-fit">
@@ -361,30 +356,32 @@ const Login = () => {
                   {loginErrors.phoneNumber && (
                     <p>{loginErrors.phoneNumber.message}</p>
                   )}
-                </div>
-                <div className="divider my-6 flex gap-1 items-center justify-center w-full">
-                  <div className="w-1/2 h-[2px] bg-white"></div>
-                  <div>Or</div>
-                  <div className="w-1/2 h-[2px] bg-white"></div>
-                </div>
-                <div className="email w-full text-black">
-                  <input
-                    className="h-[40px] px-4 rounded-md w-full bg-white"
-                    type="email"
-                    {...loginRegister("email")}
-                    value={email}
-                    placeholder="Email"
-                    onChange={(e) => {
-                      setEmail(e.target.value);
-                    }}
-                  />
-                </div>
-                {loginErrors.email && <p>{loginErrors.email.message}</p>}
-                <div className="flex justify-center items-center my-4 w-full">
-                  <button className="p-2 bg-pink-500 rounded-lg " type="submit">
-                    {loading ? <Spinner /> : "Send OTP"}
-                  </button>
-                </div>
+                </div> */}
+              <div className="divider my-6 flex gap-1 items-center justify-center w-full">
+                {/* <div className="w-1/2 h-[2px] bg-white"></div> */}
+                {/* <div>Or</div> */}
+                {/* <div className="w-1/2 h-[2px] bg-white"></div> */}
+              </div>
+              <div className="email w-full text-white">
+                <input
+                  className="h-[40px] px-4 rounded-md w-full bg-[#F48FB1] text-lg font-semibold  placeholder:text-white ring-[#a16084] focus:outline-none focus:ring-2"
+                  type="email"
+                  {...loginRegister("email")}
+                  value={email}
+                  placeholder="Email"
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                  }}
+                />
+              </div>
+              {loginErrors.email && <p>{loginErrors.email.message}</p>}
+              <div className="flex justify-center items-center my-4 w-full">
+                <button
+                  className="px-4 py-2 bg-[#C2185B] rounded-lg font-semibold text-white"
+                  type="submit"
+                >
+                  {loading ? <Spinner /> : "Send OTP"}
+                </button>
               </div>
             </form>
           )}
@@ -393,11 +390,8 @@ const Login = () => {
               className="flex flex-col justify-center items-center"
               onSubmit={handleOtpSubmit(onOtpSubmit)}
             >
-              <p className="text-md text-center">
-                Enter the otp sent to{" "}
-                {userPhoneData.phoneNumber
-                  ? userPhoneData.phoneSuffix + userPhoneData.phoneNumber
-                  : userPhoneData.email}
+              <p className="text-lg font-bold text-center text-[#1C1C2E]">
+                Enter the 6 digit OTP sent
               </p>
               <div className="otp mb-4 flex gap-2">
                 {otp.map((digit, index) => {
@@ -409,12 +403,14 @@ const Login = () => {
                       id={`otp-${index}`}
                       value={digit}
                       onChange={(e) => handleOtpInput(e.target.value, index)}
-                      className="h-14 w-14 text-2xl text-center rounded-md mt-4 bg-white focus:outline-none focus:ring-2 ring-pink-600 text-black flex justify-center items-center"
+                      className=" my-2 w-14 h-16 border-2 border-pink-300/40 rounded-2xl bg-pink-100/30 text-center text-2xl font-semibold text-gray-900 outline-none caret-pink-500 transition-all duration-200 focus:border-pink-500 focus:bg-white focus:ring-4 focus:ring-pink-500/20 focus:-translate-y-0.5r"
                     />
                   );
                 })}
               </div>
-              {otpErrors.otp && <p className="bg-red-500">{otpErrors.otp.message}</p>}
+              {otpErrors.otp && (
+                <p className="bg-red-500">{otpErrors.otp.message}</p>
+              )}
               <button
                 type="submit"
                 id="verify-btn"
@@ -455,7 +451,7 @@ const Login = () => {
                     className="hidden"
                   />
                 </div>
-                <p>Choose an Avatar</p>
+                <p className="text-[#1C1C2E] text-lg font-bold">Choose an Avatar</p>
                 <div className="avatars flex flex-wrap gap-1">
                   {avatars.map((avatar, index) => {
                     return (
@@ -463,11 +459,10 @@ const Login = () => {
                         key={index}
                         src={avatar}
                         alt={`avatar-${index}`}
-                        className={`h-12 w-12 rounded-full cursor-pointer p-0.5 ${
-                          selectedAvatar === avatar
+                        className={`h-12 w-12 rounded-full cursor-pointer p-0.5 ${selectedAvatar === avatar
                             ? "ring-2 ring-pink-500"
                             : ""
-                        }`}
+                          }`}
                         onClick={() => {
                           setSelectedAvatar(avatar);
                         }}
@@ -481,7 +476,7 @@ const Login = () => {
                     type="text"
                     {...profileRegister("username")}
                     placeholder="Username"
-                    className=" w-full pl-10 pr-2 py-2 border rounded-lg focus:outline-pink-500 text-black"
+                    className=" w-full pl-10 pr-2 py-2 border rounded-lg focus:outline-pink-500 text-black bg-white"
                   />
                 </div>
                 {profileErrors.username && (
@@ -490,7 +485,7 @@ const Login = () => {
                 <div className="flex items-center space-x-2">
                   <input
                     type="checkbox"
-                    className="rounded focus:outline-pink-500 text-pink-400"
+                    className="rounded focus:outline-pink-500 text-pink-400 bg-white"
                     {...profileRegister("agreed")}
                   />
                   <label htmlFor="terms">
@@ -512,7 +507,7 @@ const Login = () => {
                   type="submit"
                   id="verify-btn"
                   disabled={!watch("agreed") || loading}
-                  className=" w-full bg-pink-500 p-2 rounded-md hover:bg-pink-600 mb-3 disabled:bg-pink-200"
+                  className=" w-full bg-pink-500 p-2 rounded-md hover:bg-pink-600 mb-3 disabled:bg-pink-200 "
                 >
                   {loading ? <Spinner /> : " "}Create Profile
                 </button>
