@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
+import { BrevoClient } from "@getbrevo/brevo";
 
 dotenv.config();
 
@@ -43,15 +44,24 @@ const sendOtpToEmail = async (email , otp) => {
     </div>
   `;
   try {
-    const info = await transporter.sendMail({
-      from: process.env.APP_HOST,
-      to: email,
-      subject: "Chatify Verification OTP",
-      html,
+    const client = new BrevoClient({
+        apiKey: process.env.BREVO_API_KEY,
     });
-    console.log("Email sent successfully:", info);
-    return info;
-  } catch (error) {
+    await client.transactionalEmails.sendTransacEmail({
+        htmlContent: html,
+        sender: {
+            email: "mdkamranqutub226@gmail.com",
+            name: "Chatify",
+        },
+        subject: "OTP for Chatify Verification!",
+        to: [
+            {
+                email: `${email}`,
+                name: "User",
+            },
+        ],
+    });
+}catch (error) {
     console.error("Error sending email:", error);
     throw new Error("Failed to send email");
   }

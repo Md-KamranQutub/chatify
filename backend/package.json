@@ -1,6 +1,7 @@
 {
   "name": "backend",
   "version": "1.0.0",
+  "type": "module",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
@@ -12,7 +13,9 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@getbrevo/brevo": "^4.0.1",
     "body-parser": "^2.2.0",
+    "brevo": "^1.0.0",
     "cloudinary": "^2.8.0",
     "cookie-parser": "^1.4.7",
     "cookieparser": "^0.1.0",

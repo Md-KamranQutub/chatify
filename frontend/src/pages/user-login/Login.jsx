@@ -409,7 +409,7 @@ const Login = () => {
                       id={`otp-${index}`}
                       value={digit}
                       onChange={(e) => handleOtpInput(e.target.value, index)}
-                      className="h-14 w-14 text-2xl text-center rounded-md mt-4 focus:outline-none focus:ring-2 ring-pink-600 text-black flex justify-center items-center"
+                      className="h-14 w-14 text-2xl text-center rounded-md mt-4 bg-white focus:outline-none focus:ring-2 ring-pink-600 text-black flex justify-center items-center"
                     />
                   );
                 })}
