@@ -292,75 +292,8 @@ const Login = () => {
               <h1 className="font-bold text-xl text-[#1C1C2E]">
                 Enter Your Email to Log In
               </h1>
-              {/* <p>Enter your phone number to recieve an OTP</p>
-              <div className="relative w-full">
-                <div className="flex w-full gap-2">
-                  <div className="relative w-fit">
-                    <button
-                      type="button"
-                      className={`p-2 rounded-md z-4 bg-white text-black w-fit flex space-x-2 justify-center items-center`}
-                      onClick={(e) => {
-                        setShowDropDown(!showDrowpDown);
-                        e.preventDefault();
-                      }}
-                    >
-                      <span>
-                        {selectedCountry.flag}({selectedCountry.dialCode})
-                      </span>
-                      <FaChevronDown />
-                    </button>
-                    {showDrowpDown && (
-                      <div className="absolute max-h-40 max-w-24 overflow-y-auto overflow-x-hidden z-10 bg-white rounded-md">
-                        <input
-                          type="text"
-                          className="sticky top-0 rounded-md my-1 px-2 focus:outline-none focus:ring-1 ring-pink-300 text-sm w-24 text-black h-6"
-                          placeholder="Search Country"
-                          value={searchTerm}
-                          onChange={(e) => {
-                            setSearchTerm(e.target.value);
-                          }}
-                        />
-                        <div className="flex gap-1 flex-col bg-white no-scrollbar">
-                          {filteredCountries.map((country) => {
-                            return (
-                              <button
-                                key={country.alpha2}
-                                type="button"
-                                className="bg-white text-black hover:bg-gray-300"
-                                onClick={(e) => {
-                                  setselectedCountry(country);
-                                  setShowDropDown(!showDrowpDown);
-                                }}
-                              >
-                                {country.flag}
-                                {country.dialCode}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  <div className="phoneNumber w-2/3 h-[40px]  text-black">
-                    <input
-                      className="h-[40px] w-full bg-white px-4 rounded-md"
-                      type="text"
-                      {...loginRegister("phoneNumber")}
-                      value={phoneNumber}
-                      placeholder="Phone Number"
-                      onChange={(e) => {
-                        setPhoneNumber(e.target.value);
-                      }}
-                    />
-                  </div>
-                  {loginErrors.phoneNumber && (
-                    <p>{loginErrors.phoneNumber.message}</p>
-                  )}
-                </div> */}
+              
               <div className="divider my-6 flex gap-1 items-center justify-center w-full">
-                {/* <div className="w-1/2 h-[2px] bg-white"></div> */}
-                {/* <div>Or</div> */}
-                {/* <div className="w-1/2 h-[2px] bg-white"></div> */}
               </div>
               <div className="email w-full text-white">
                 <input
