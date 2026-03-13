@@ -9,7 +9,7 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import useThemeStore from "../../store/useThemeStore";
 import { easeInOut, motion } from "framer-motion";
-import { FaChevronDown, FaArrowLeft, FaPlus, FaUser } from "react-icons/fa";
+import { FaArrowLeft, FaPlus, FaUser } from "react-icons/fa";
 import Spinner from "../../utils/Spinner";
 import { sendOtp, updateProfile, verifyOtp } from "../../services/user.service";
 import { toast } from "react-toastify";
@@ -336,7 +336,7 @@ const Login = () => {
                       id={`otp-${index}`}
                       value={digit}
                       onChange={(e) => handleOtpInput(e.target.value, index)}
-                      className=" my-2 w-14 h-16 border-2 border-pink-300/40 rounded-2xl bg-pink-100/30 text-center text-2xl font-semibold text-gray-900 outline-none caret-pink-500 transition-all duration-200 focus:border-pink-500 focus:bg-white focus:ring-4 focus:ring-pink-500/20 focus:-translate-y-0.5r"
+                      className=" my-2 w-14 h-16 border-2 border-pink-300/40 rounded-2xl bg-pink-100/30 text-center text-2xl font-semibold text-gray-900 outline-none caret-pink-500 transition-all duration-200 focus:border-pink-500 focus:bg-white focus:ring-4 focus:ring-pink-500/20 focus:-translate-y-0.5"
                     />
                   );
                 })}
