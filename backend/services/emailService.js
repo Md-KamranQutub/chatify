@@ -4,20 +4,20 @@ import { BrevoClient } from "@getbrevo/brevo";
 
 dotenv.config();
 
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.APP_EMAIL,
-    pass: process.env.APP_PASS,
-  },
-});
-transporter.verify((error, success) => {
-  if (error) {
-    console.log(error);
-  } else {
-    console.log("Ready to send emails");
-  }
-});
+// const transporter = nodemailer.createTransport({
+//   service: "gmail",
+//   auth: {
+//     user: process.env.APP_EMAIL,
+//     pass: process.env.APP_PASS,
+//   },
+// });
+// transporter.verify((error, success) => {
+//   if (error) {
+//     console.log(error);
+//   } else {
+//     console.log("Ready to send emails");
+//   }
+// });
 
 const sendOtpToEmail = async (email , otp) => {
   const html = `

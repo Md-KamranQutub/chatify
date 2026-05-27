@@ -23,7 +23,7 @@ const sendOtp = async(req, res) => {
        user.emailOtp = otp;
        user.emailOtpExpiry = Date.now() + 3 * 60 * 1000; // 3 minutes from now
        await user.save();
-       await sendOtpToEmail(email, otp);
+       const result = await sendOtpToEmail(email, otp);
        return response(res, 200, "OTP sent to email", {email});
     }
     if(!phoneNumber || !phoneSuffix)

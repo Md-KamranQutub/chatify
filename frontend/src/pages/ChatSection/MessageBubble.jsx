@@ -1,256 +1,274 @@
 import { format } from "date-fns";
 import React, { useRef, useState, useEffect } from "react";
-import { FaCheck, FaCheckDouble, FaSmile, FaPlus, FaRegCopy, FaTrash } from "react-icons/fa";
-import {HiDotsVertical} from "react-icons/hi";
+import {
+  FaCheck,
+  FaCheckDouble,
+  FaSmile,
+  FaPlus,
+  FaRegCopy,
+  FaTrash,
+} from "react-icons/fa";
+import { HiDotsVertical } from "react-icons/hi";
+import { RxCross2 } from "react-icons/rx";
 import useOutSideClick from "../../hooks/useOutsideClick";
 import EmojiPicker from "emoji-picker-react";
-import { RxCross2 } from "react-icons/rx";
 import useChatStore from "../../store/useChatStore";
 
-const MessageBubble = ({
-  message,
-  theme,
-  onReact,
-  currentUser,
-  deleteMessage,
-}) => {
-  const quickReactions = ["👍", "❤️", "😂", "😮", "😢", "🙏"];
+const quickReactions = ["👍", "❤️", "😂", "😮", "😢", "🙏"];
+
+const MessageBubble = ({ message, theme, onReact, currentUser, deleteMessage }) => {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showReactions, setShowReactions] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
-  
-  // Local state for reactions to enable optimistic updates
   const [localReactions, setLocalReactions] = useState(message.reactions || []);
-  
+
   const messageRef = useRef(null);
   const optionRef = useRef(null);
   const emojiPickerRef = useRef(null);
   const reactionsMenuRef = useRef(null);
-  const {setCurrentUser} = useChatStore();
+
+  const { setCurrentUser } = useChatStore();
   const isUserMessage = message.sender._id === currentUser._id;
-  
-  // Update local reactions when message prop changes
+  const isDark = theme === "dark";
+
   useEffect(() => {
     setLocalReactions(message.reactions || []);
   }, [message.reactions]);
-  
-  const bubbleClass = isUserMessage ? `chat-end` : `chat-start`;
-  const bubbleContentClass = isUserMessage
-    ? `chat-bubble md:max-w-[50%] min-w-[130px] ${
-        theme === "dark" ? "bg-[#144d38] text-white" : "bg-[#d9fdd3] text-black"
-      }`
-    : `chat-bubble md:max-w-[50%] min-w-[130px] ${
-        theme === "dark" ? "bg-gray-200 text-black" : "bg-white text-black"
-      }`;
 
   const handleReact = async (emoji) => {
     setCurrentUser(currentUser);
-    
-    // Find if user already has any reaction on this message
-    const existingReactionIndex = localReactions.findIndex(
-      r => r.user === currentUser._id
+    const existingIndex = localReactions.findIndex(
+      (r) => r.user === currentUser._id
     );
-    
-    // If user already reacted with the same emoji, remove it
-    if (existingReactionIndex !== -1 && localReactions[existingReactionIndex].emoji === emoji) {
-      setLocalReactions(prev => prev.filter((_, i) => i !== existingReactionIndex));
+    if (existingIndex !== -1 && localReactions[existingIndex].emoji === emoji) {
+      setLocalReactions((prev) => prev.filter((_, i) => i !== existingIndex));
     } else {
-      // Remove any existing reaction from this user and add the new one
-      const newReaction = {
-        emoji: emoji,
-        user: currentUser._id,
-        _id: Date.now().toString() // temporary ID
-      };
-      
-      setLocalReactions(prev => {
-        // Filter out any existing reaction from current user
-        const filtered = prev.filter(r => r.user !== currentUser._id);
-        // Add the new reaction
-        return [...filtered, newReaction];
-      });
+      setLocalReactions((prev) => [
+        ...prev.filter((r) => r.user !== currentUser._id),
+        { emoji, user: currentUser._id, _id: Date.now().toString() },
+      ]);
     }
-    
-    // Call the parent's onReact function
     await onReact(message._id, emoji);
-    
     setShowEmojiPicker(false);
     setShowReactions(false);
   };
 
-  useOutSideClick(emojiPickerRef, () => {
-    if (showEmojiPicker) setShowEmojiPicker(false);
-  });
-  useOutSideClick(reactionsMenuRef, () => {
-    if (showReactions) setShowReactions(false);
-  });
-  useOutSideClick(optionRef, () => {
-    if (showOptions) setShowOptions(false);
-  });
+  useOutSideClick(emojiPickerRef, () => { if (showEmojiPicker) setShowEmojiPicker(false); });
+  useOutSideClick(reactionsMenuRef, () => { if (showReactions) setShowReactions(false); });
+  useOutSideClick(optionRef, () => { if (showOptions) setShowOptions(false); });
+
+  // ── Bubble colours ──────────────────────────────────────────────────────
+  const sentBg   = isDark ? "bg-[#4a1230] text-[#F8BBD0]"   : "bg-[#C2185B] text-white";
+  const recvBg   = isDark ? "bg-[#2d0f1c] text-[#F8BBD0]"   : "bg-white text-[#4A1528] border border-[#F8BBD0]";
+  const bubbleBg = isUserMessage ? sentBg : recvBg;
 
   return (
-    <div className={`chat ${bubbleClass} mt-4`}>
-      <div className={`${bubbleContentClass} relative group`} ref={messageRef}>
-        <div className="flex justify-center gap-2">
+    <div className={`flex mt-3 ${isUserMessage ? "justify-end" : "justify-start"}`}>
+      <div className="relative group max-w-[70%]" ref={messageRef}>
+
+        {/* ── Bubble ── */}
+        <div
+          className={`relative px-4 py-2.5 rounded-2xl shadow-sm ${bubbleBg} ${
+            isUserMessage ? "rounded-tr-sm" : "rounded-tl-sm"
+          }`}
+        >
+          {/* Content */}
           {message.contentType === "text" && (
-            <p className="mr-2">{message.content}</p>
+            <p className="text-sm leading-relaxed break-words pr-1">
+              {message.content}
+            </p>
           )}
           {message.contentType === "image" && (
-            <div className="flex gap-1 flex-col justify-center">
+            <div className="flex flex-col gap-1">
               <img
                 src={message.imageOrVideoUrl}
-                alt="image-video"
-                className="rounded-lg max-w-xs"
+                alt="attachment"
+                className="rounded-xl max-w-xs object-cover"
               />
-              <p className="mt-1">{message.content}</p>
+              {message.content && (
+                <p className="text-sm mt-1">{message.content}</p>
+              )}
             </div>
           )}
           {message.contentType === "video" && (
-            <div className="flex gap-1 flex-col justify-center">
+            <div className="flex flex-col gap-1">
               <video
                 src={message.imageOrVideoUrl}
-                alt="image-video"
                 controls
-                className="rounded-lg max-w-xs"
+                className="rounded-xl max-w-xs"
               />
-              <p className="mt-1">{message.content}</p>
+              {message.content && (
+                <p className="text-sm mt-1">{message.content}</p>
+              )}
+            </div>
+          )}
+
+          {/* Timestamp + status */}
+          <div
+            className={`flex items-center justify-end gap-1 mt-1.5 text-[11px] ${
+              isUserMessage
+                ? isDark ? "text-[#F48FB1]/60" : "text-white/70"
+                : isDark ? "text-[#7d3a50]" : "text-[#AD1457]/50"
+            }`}
+          >
+            <span>{format(new Date(message.createdAt), "HH:mm")}</span>
+            {isUserMessage && (
+              <>
+                {message.messageStatus === "send" && <FaCheck size={10} />}
+                {message.messageStatus === "delivered" && <FaCheckDouble size={10} />}
+                {message.messageStatus === "read" && (
+                  <FaCheckDouble size={10} className="text-blue-300" />
+                )}
+              </>
+            )}
+          </div>
+
+          {/* Three-dot menu button */}
+          <div className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+            <button
+              onClick={() => setShowOptions(!showOptions)}
+              className={`p-1 rounded-full transition ${
+                isUserMessage
+                  ? isDark ? "hover:bg-white/10 text-white/70" : "hover:bg-white/20 text-white/80"
+                  : isDark ? "hover:bg-white/10 text-[#F48FB1]" : "hover:bg-[#FCE4EC] text-[#C2185B]"
+              }`}
+              aria-label="Message options"
+            >
+              <HiDotsVertical size={15} />
+            </button>
+          </div>
+
+          {/* Options dropdown */}
+          {showOptions && (
+            <div
+              ref={optionRef}
+              className={`absolute top-8 right-1 z-50 w-36 rounded-xl shadow-xl py-1.5 text-sm border ${
+                isDark
+                  ? "bg-[#1a0a10] border-[#3d1a26] text-[#F8BBD0]"
+                  : "bg-white border-[#F8BBD0] text-[#4A1528]"
+              }`}
+            >
+              <button
+                onClick={() => {
+                  if (message.contentType === "text") {
+                    navigator.clipboard.writeText(message.content);
+                  }
+                  setShowOptions(false);
+                }}
+                className={`flex items-center w-full px-4 py-2 gap-3 transition ${
+                  isDark ? "hover:bg-[#2d0f1c]" : "hover:bg-[#FFF0F5]"
+                }`}
+              >
+                <FaRegCopy size={13} className={isDark ? "text-[#F48FB1]" : "text-[#C2185B]"} />
+                Copy
+              </button>
+              {isUserMessage && (
+                <button
+                  onClick={() => {
+                    deleteMessage(message?._id);
+                    setShowOptions(false);
+                  }}
+                  className={`flex items-center w-full px-4 py-2 gap-3 transition border-t ${
+                    isDark
+                      ? "hover:bg-[#2d0f1c] border-[#3d1a26] text-red-400"
+                      : "hover:bg-red-50 border-[#F8BBD0] text-red-500"
+                  }`}
+                >
+                  <FaTrash size={13} />
+                  Delete
+                </button>
+              )}
             </div>
           )}
         </div>
-        <div className="self-end flex items-center justify-end gap-1 text-xs opacity-60 mt-2 ml-2">
-          <span>{format(new Date(message.createdAt), "HH:mm")}</span>
-          {isUserMessage && (
-            <>
-              {message.messageStatus === "send" && <FaCheck size={12} />}
-              {message.messageStatus === "delivered" && (
-                <FaCheckDouble size={12} />
-              )}
-              {message.messageStatus === "read" && (
-                <FaCheckDouble size={12} className="text-blue-600" />
-              )}
-            </>
-          )}
-        </div>
-        <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity z-50">
-          <button
-            onClick={() => setShowOptions(!showOptions)}
-            className={`p-1 rounded-full ${
-              theme === "dark" ? "text-white" : "text-gray-800"
+
+        {/* ── Reaction emoji strip below bubble ── */}
+        {localReactions.length > 0 && (
+          <div
+            className={`absolute -bottom-5 ${isUserMessage ? "right-2" : "left-2"} flex items-center gap-0.5 px-2 py-0.5 rounded-full shadow-md text-sm ${
+              isDark ? "bg-[#2d0f1c] border border-[#3d1a26]" : "bg-white border border-[#F8BBD0]"
             }`}
           >
-            <HiDotsVertical size={18} />
-          </button>
-        </div>
+            {localReactions.map((r, i) => (
+              <span key={i}>{r.emoji}</span>
+            ))}
+          </div>
+        )}
+
+        {/* ── Hover: react button (beside bubble) ── */}
         <div
-          className={`absolute ${
-            isUserMessage ? "-left-10" : "-right-10"
-          } top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col gap-2`}
+          className={`absolute ${isUserMessage ? "-left-9" : "-right-9"} top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity`}
         >
           <button
             onClick={() => setShowReactions(!showReactions)}
-            className={`p-2 rounded-full ${
-              theme === "dark"
-                ? "bg-[#202c33] hover:bg-[202c33]/80"
-                : "bg-white hover:bg-gray-100 shadow-lg"
+            className={`p-1.5 rounded-full shadow transition ${
+              isDark
+                ? "bg-[#2d0f1c] hover:bg-[#3d1a26] text-[#F48FB1]"
+                : "bg-white hover:bg-[#FFF0F5] border border-[#F8BBD0] text-[#F48FB1]"
             }`}
+            aria-label="React"
           >
-            <FaSmile
-              className={`${
-                theme === "dark" ? "text-gray-300" : "text-gray-600"
-              }`}
-            />
+            <FaSmile size={15} />
           </button>
         </div>
+
+        {/* ── Quick reaction bar ── */}
         {showReactions && (
           <div
             ref={reactionsMenuRef}
-            className={`absolute -top-8 ${
-              isUserMessage ? "left-0" : "left-36"
-            } transform -translate-x-1/2 flex items-center bg-white rounded-full px-2 py-1.5 gap-1 shadow-lg z-50`}
+            className={`absolute z-50 flex items-center gap-1 px-3 py-2 rounded-full shadow-xl border ${
+              isUserMessage ? "right-0 -top-12" : "left-0 -top-12"
+            } ${
+              isDark
+                ? "bg-[#1a0a10] border-[#3d1a26]"
+                : "bg-white border-[#F8BBD0]"
+            }`}
           >
-            {quickReactions.map((emoji, index) => {
-              return <button
-                key={index}
+            {quickReactions.map((emoji, i) => (
+              <button
+                key={i}
                 onClick={() => handleReact(emoji)}
-                className="hover:scale-125 transition-transform p-1"
+                className="hover:scale-125 transition-transform text-base leading-none"
               >
                 {emoji}
-              </button>;
-            })}
-            <div className="w-[1px] h-5 bg-gray-600 mx-1" />
-            <button 
-              className="hover:bg-[#ffffff1a] rounded-full p-1"  
-              onClick={() => {setShowEmojiPicker(true)}}
+              </button>
+            ))}
+            <div className={`w-px h-4 mx-1 ${isDark ? "bg-[#3d1a26]" : "bg-[#F8BBD0]"}`} />
+            <button
+              onClick={() => setShowEmojiPicker(true)}
+              className={`p-1 rounded-full transition ${
+                isDark ? "hover:bg-[#2d0f1c] text-[#F48FB1]" : "hover:bg-[#FCE4EC] text-[#C2185B]"
+              }`}
+              aria-label="More emojis"
             >
-              <FaPlus />
+              <FaPlus size={11} />
             </button>
           </div>
         )}
+
+        {/* ── Full emoji picker ── */}
         {showEmojiPicker && (
-          <div ref={emojiPickerRef} className={`absolute ${isUserMessage ? "right-0" : "left-0"} mb-6 z-50`}>
-            <div className="relative">
+          <div
+            ref={emojiPickerRef}
+            className={`absolute z-50 ${isUserMessage ? "right-0" : "left-0"} -top-[360px]`}
+          >
+            <div className="relative rounded-2xl overflow-hidden shadow-2xl">
               <EmojiPicker
                 onEmojiClick={(emojiObject) => {
-                  console.log("Emoji", emojiObject.emoji);
                   handleReact(emojiObject.emoji);
                   setShowEmojiPicker(false);
                 }}
               />
               <button
-                className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
                 onClick={() => setShowEmojiPicker(false)}
+                className={`absolute top-2 right-2 p-1 rounded-full transition ${
+                  isDark ? "bg-[#2d0f1c] text-[#F48FB1] hover:bg-[#3d1a26]" : "bg-[#FCE4EC] text-[#C2185B] hover:bg-[#F8BBD0]"
+                }`}
+                aria-label="Close emoji picker"
               >
-                <RxCross2 />
+                <RxCross2 size={14} />
               </button>
             </div>
-          </div>
-        )}
-        {localReactions && localReactions.length > 0 && (
-          <div
-            className={`absolute -bottom-5 ${
-              isUserMessage ? "right-2" : "left-2"
-            } ${
-              theme === "dark" ? "bg-[#2a3942]" : "bg-gray-200"
-            } rounded-full px-2 shadow-md`}
-          >
-            {localReactions.map((reaction, index) => {
-              return <span key={index}>{reaction.emoji}</span>;
-            })}
-          </div>
-        )}
-
-        {showOptions && (
-          <div
-            ref={optionRef}
-            className={`absolute top-8 right-1 z-50 w-36 rounded-xl shadow-lg py-2 text-sm ${
-              theme === "dark"
-                ? "bg-[#1d1f1f] text-white"
-                : "bg-gray-100 text-black"
-            }`}
-          >
-            <button 
-              onClick={() => {
-                if(message.contentType === 'text'){
-                  navigator.clipboard.writeText(message.content);
-                }
-                setShowOptions(false);
-              }} 
-              className="flex items-center w-full px-4 py-2 gap-3 rounded-lg"
-            >
-              <FaRegCopy size={14}/>
-              <span>Copy</span>
-            </button>
-            {isUserMessage && (
-              <button 
-                onClick={() => {
-                  deleteMessage(message?._id);
-                  setShowOptions(false);
-                }} 
-                className="flex items-center w-full px-4 py-2 gap-3 rounded-lg text-red-600"
-              >
-                <FaTrash className="text-red-600" size={14}/>
-                <span>Delete</span>
-              </button>
-            )}
           </div>
         )}
       </div>

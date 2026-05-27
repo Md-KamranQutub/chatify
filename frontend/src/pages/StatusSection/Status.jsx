@@ -2,18 +2,17 @@ import React, { useEffect, useState } from "react";
 import useThemeStore from "../../store/useThemeStore";
 import useUserStore from "../../store/useUserStore";
 import useStatusStore from "../../store/useStatusStore";
-import { create } from "zustand";
 import StatusPreview from "./StatusPreview";
 import Layout from "../../components/Layout";
 import { motion } from "framer-motion";
 import { RxCross2 } from "react-icons/rx";
-import { FaCamera, FaEllipsisH, FaPlus } from "react-icons/fa";
+import { FaCamera, FaEllipsisH, FaPlus, FaImages } from "react-icons/fa";
 import formatTimestamp from "../../utils/Data";
 import StatusList from "./StatusList";
 
 const Status = () => {
   const [previewContact, setPreviewContact] = useState(null);
-  const [currentStatusIndex, setcurrentStatusIndex] = useState(0);
+  const [currentStatusIndex, setCurrentStatusIndex] = useState(0);
   const [showOption, setShowOption] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -30,27 +29,23 @@ const Status = () => {
     createStatus,
     viewStatus,
     deleteStatus,
-    getStatusViewers,
     getUserStatuses,
     getOtherStatuses,
     clearError,
-    reset,
     initializeSocket,
     cleanupSocket,
   } = useStatusStore();
+
+  const isDark = theme === "dark";
   const userStatuses = getUserStatuses(currentUser._id);
   const otherStatuses = getOtherStatuses(currentUser._id);
 
   useEffect(() => {
     fetchStatuses();
     initializeSocket();
-
-    return () => {
-      cleanupSocket();
-    };
+    return () => cleanupSocket();
   }, [currentUser?._id]);
 
-  //clear the error when the page is unmount
   useEffect(() => {
     return () => clearError();
   }, []);
@@ -59,13 +54,12 @@ const Status = () => {
     if (!newStatus.trim() && !selectedFile) return;
     try {
       await createStatus({ content: newStatus, file: selectedFile });
-
       setNewStatus("");
       setSelectedFile(null);
       setFilePreview(null);
       setShowCreateModal(false);
     } catch (error) {
-      console.error("Error Creating status ", error);
+      console.error("Error creating status", error);
     }
   };
 
@@ -73,7 +67,7 @@ const Status = () => {
     try {
       await viewStatus(statusId);
     } catch (error) {
-      console.error("Error in viewing status", error);
+      console.error("Error viewing status", error);
     }
   };
 
@@ -83,42 +77,44 @@ const Status = () => {
       setShowOption(false);
       handlePreviewClose();
     } catch (error) {
-      console.error("Error in deleting status", error);
+      console.error("Error deleting status", error);
     }
   };
 
   const handlePreviewClose = () => {
     setPreviewContact(null);
-    setcurrentStatusIndex(0);
+    setCurrentStatusIndex(0);
   };
 
   const handlePreviewNext = () => {
     if (currentStatusIndex < previewContact.statuses.length - 1) {
-      setcurrentStatusIndex((prev) => prev + 1);
+      setCurrentStatusIndex((prev) => prev + 1);
     } else {
       handlePreviewClose();
     }
   };
+
   const handlePreviewPrev = () => {
-    setcurrentStatusIndex((prev) => Math.max(0, prev - 1));
+    setCurrentStatusIndex((prev) => Math.max(0, prev - 1));
   };
 
   const handleStatusPreview = (contact, statusIndex = 0) => {
     setPreviewContact(contact);
-    setcurrentStatusIndex(statusIndex);
+    setCurrentStatusIndex(statusIndex);
     if (contact.statuses[statusIndex]) {
       handleViewStatus(contact.statuses[statusIndex].id);
     }
   };
-  const handleFileChange = (e)=>{
+
+  const handleFileChange = (e) => {
     const file = e.target.files[0];
-    if(file){
-    setSelectedFile(file);
-    if(file.type.startsWith("image/") || file.type.startsWith("video/")){
-      setFilePreview(URL.createObjectURL(file))
+    if (file) {
+      setSelectedFile(file);
+      if (file.type.startsWith("image/") || file.type.startsWith("video/")) {
+        setFilePreview(URL.createObjectURL(file));
+      }
     }
-    }
-  }
+  };
 
   return (
     <Layout
@@ -140,179 +136,181 @@ const Status = () => {
       }
     >
       <motion.div
-        className={` flex-col h-screen border-r ${
-          theme === "dark"
-            ? "bg-[rgb(12,19,24)] border-gray-600"
-            : " bg-gray-100 text-black"
+        className={`flex flex-col h-screen border-r transition-colors duration-200 ${
+          isDark
+            ? "bg-[#1a0a10] border-[#3d1a26]"
+            : "bg-[#FFF0F5] border-[#F8BBD0]"
         }`}
       >
+        {/* ── Header ── */}
         <div
-          className={`flex justify-between items-center shadow-md ${
-            theme === "dark" ? "bg-[rgb(17,27,33)]" : "bg-white"
-          } p-4`}
+          className={`px-5 pt-6 pb-4 border-b ${
+            isDark
+              ? "bg-[#1a0a10] border-[#3d1a26]"
+              : "bg-[#FFF0F5] border-[#F8BBD0]"
+          }`}
         >
-          <h2 className="text-2xl font-bold">Updates</h2>
+          <h2
+            className={`text-2xl font-semibold tracking-tight ${
+              isDark ? "text-[#F8BBD0]" : "text-[#880E4F]"
+            }`}
+          >
+            Updates
+          </h2>
         </div>
+
+        {/* ── Error banner ── */}
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mx-4 mt-2">
-            <span className="block sm:inline">{error}</span>
-            <button
-              className="float-right text-red-500 hover:text-red-700"
-              onClick={clearError}
-            >
-              <RxCross2 className="h-5 w-5" />
+          <div className="mx-4 mt-3 flex items-start gap-3 px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm">
+            <span className="flex-1">{error}</span>
+            <button onClick={clearError} aria-label="Dismiss error">
+              <RxCross2 className="w-4 h-4 mt-0.5" />
             </button>
           </div>
         )}
-        <div className="overflow-y-auto h-[calc(100vh-64px)]">
+
+        <div className="flex-1 overflow-y-auto">
+
+          {/* ── My status card ── */}
           <div
-            className={`flex p-3 space-x-4 shadow-md ${
-              theme === "dark" ? "bg-[rgb(17,27,33)]" : "bg-white"
-            } `}
+            className={`mx-4 mt-4 p-3 rounded-2xl border flex items-center gap-3 cursor-pointer transition ${
+              isDark
+                ? "bg-[#2d0f1c] border-[#3d1a26] hover:border-[#C2185B]/40"
+                : "bg-white border-[#F8BBD0] hover:border-[#F48FB1]"
+            }`}
+            onClick={() =>
+              userStatuses
+                ? handleStatusPreview(userStatuses)
+                : setShowCreateModal(true)
+            }
           >
-            <div
-              className="relative cursor-pointer"
-              onClick={() =>{
-                userStatuses
-                  ? handleStatusPreview(userStatuses)
-                  : setShowCreateModal(true)
-              }}
-            >
-              <img
-                src={currentUser?.profilePicture}
-                alt={currentUser.username}
-                className="w-12 h-12 rounded-full object-cover"
-              />
+            {/* Avatar with ring */}
+            <div className="relative flex-shrink-0">
               {userStatuses ? (
-                <>
-                  <svg
-                    className="absolute top-0 left-0 w-12 h-12"
-                    viewBox="0 0 100 100"
-                  >
-                    {userStatuses.statuses.map((_, index) => {
-                      const circumference = 2 * Math.PI * 48;
-                      const segmentLength =
-                        circumference / userStatuses.statuses.length;
-                      const offset = index * segmentLength;
-                      return (
-                        <circle
-                          key={index}
-                          cx="50"
-                          cy="50"
-                          r="48"
-                          fill="none"
-                          stroke="#25D366"
-                          strokeWidth="4"
-                          strokeDasharray={`${segmentLength - 5} 5`}
-                          strokeDashoffset={-offset}
-                          transform={`rotate(-90 50 50)`}
-                        />
-                      );
-                    })}
-                  </svg>
-                  <button
-                    className="absolute bottom-0 right-0 bg-pink-500 text-white p-1 rounded-full"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowCreateModal(true);
-                    }}
-                  >
-                    <FaPlus className="h-2 w-2 " />
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button
-                    className="absolute bottom-0 right-0 bg-pink-500 text-white p-1 rounded-full"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowCreateModal(false);
-                    }}
-                  >
-                    <FaPlus className="h-2 w-2 " />
-                  </button>
-                </>
-              )}
-            </div>
-            <div className="flex flex-col items-start flex-1">
-              <p className="font-semibold">My Updates</p>
-              <p
-                className={`text-sm ${
-                  theme === "dark" ? "text-gray-400" : "text-gray-500"
-                }`}
+                <svg className="absolute top-0 left-0 w-12 h-12 -rotate-90" viewBox="0 0 100 100">
+                  {userStatuses.statuses.map((_, index) => {
+                    const circumference = 2 * Math.PI * 46;
+                    const segmentLength = circumference / userStatuses.statuses.length;
+                    const offset = index * segmentLength;
+                    return (
+                      <circle
+                        key={index}
+                        cx="50" cy="50" r="46"
+                        fill="none"
+                        stroke="#C2185B"
+                        strokeWidth="4"
+                        strokeDasharray={`${segmentLength - 4} 4`}
+                        strokeDashoffset={-offset}
+                      />
+                    );
+                  })}
+                </svg>
+              ) : null}
+              <img
+                src={
+                  currentUser?.profilePicture ||
+                  "https://api.dicebear.com/6.x/avataaars/svg?seed=You"
+                }
+                alt={currentUser.username}
+                className="w-12 h-12 rounded-full object-cover border-2 border-[#F48FB1]"
+              />
+              <button
+                className="absolute bottom-0 right-0 w-5 h-5 bg-[#C2185B] hover:bg-[#AD1457] text-white rounded-full flex items-center justify-center shadow transition"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowCreateModal(true);
+                }}
+                aria-label="Add status"
               >
+                <FaPlus className="w-2 h-2" />
+              </button>
+            </div>
+
+            {/* Text */}
+            <div className="flex-1 min-w-0">
+              <p className={`font-semibold text-sm ${isDark ? "text-[#F8BBD0]" : "text-[#4A1528]"}`}>
+                My Updates
+              </p>
+              <p className={`text-xs mt-0.5 truncate ${isDark ? "text-[#7d3a50]" : "text-[#AD1457]/70"}`}>
                 {userStatuses
-                  ? `${userStatuses.statuses.length} update${
-                      userStatuses?.statuses.length > 1 ? "s" : ""
-                    } ${formatTimestamp(
-                      userStatuses.statuses[userStatuses.statuses.length - 1]
-                        .timeStamp
+                  ? `${userStatuses.statuses.length} update${userStatuses.statuses.length > 1 ? "s" : ""} · ${formatTimestamp(
+                      userStatuses.statuses[userStatuses.statuses.length - 1].timeStamp
                     )}`
-                  : "Tap to add Updates"}
+                  : "Tap to add an update"}
               </p>
             </div>
+
+            {/* Options button */}
             {userStatuses && (
               <button
-                className="ml-auto"
-                onClick={() => setShowOption(!showOption)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowOption(!showOption);
+                }}
+                className={`p-2 rounded-full transition flex-shrink-0 ${
+                  isDark ? "hover:bg-[#3d1a26] text-[#F48FB1]" : "hover:bg-[#FCE4EC] text-[#C2185B]"
+                }`}
+                aria-label="Status options"
               >
-                <FaEllipsisH
-                  className={`h-5 w-5 ${
-                    theme === "dark" ? "text-gray-400" : "text-gray-500"
-                  }`}
-                />
+                <FaEllipsisH className="w-4 h-4" />
               </button>
             )}
           </div>
-          {/* options menu  */}
+
+          {/* ── Options dropdown ── */}
           {showOption && userStatuses && (
             <div
-              className={`p-2 shadow-md ${
-                theme === "dark" ? "bg-[rgb(17,27,33)]" : "bg-white"
-              } `}
-            >
-              <button
-                onClick={() => {
-                  setShowCreateModal(true);
-                  setShowOption(false);
-                }}
-                className="w-full text-left text-blue-500 py-2 hover:bg-gray-100 px-2 rounded flex items-center"
-              >
-                <FaCamera className="inline-block mr-2" />
-                Add Updates
-              </button>
-              <button
-                onClick={() => {
-                  handleStatusPreview(userStatuses);
-                  setShowOption(false);
-                }}
-                className="w-full text-left text-blue-500 py-2 hover:bg-gray-`00 px-2 rounded flex items-center"
-              >
-                View Updates
-              </button>
-            </div>
-          )}
-          {loading && (
-            <div className="flex justify-center items-center p-8 ">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
-            </div>
-          )}
-          {/* recent updates from other users  */}
-          {!loading && otherStatuses.length > 0 && (
-            <div
-              className={` p-4 space-y-4 shadow-md mt-4 ${
-                theme === "dark" ? "bg-[rgb(17,27,33)]" : "bg-white"
+              className={`mx-4 mt-1 rounded-xl border overflow-hidden text-sm ${
+                isDark
+                  ? "bg-[#2d0f1c] border-[#3d1a26]"
+                  : "bg-white border-[#F8BBD0]"
               }`}
             >
-              <h3
-                className={`font-semibold ${
-                  theme === "dark" ? "text-gray-400" : "text-gray-500"
+              <button
+                onClick={() => { setShowCreateModal(true); setShowOption(false); }}
+                className={`w-full flex items-center gap-3 px-4 py-3 transition ${
+                  isDark ? "hover:bg-[#3d1a26] text-[#F8BBD0]" : "hover:bg-[#FFF0F5] text-[#4A1528]"
                 }`}
               >
-                Recent Update
-              </h3>
-              {otherStatuses.map((contact, index) => {
-                return (
+                <FaCamera className={isDark ? "text-[#F48FB1]" : "text-[#C2185B]"} />
+                Add update
+              </button>
+              <div className={`mx-3 h-px ${isDark ? "bg-[#3d1a26]" : "bg-[#F8BBD0]"}`} />
+              <button
+                onClick={() => { handleStatusPreview(userStatuses); setShowOption(false); }}
+                className={`w-full flex items-center gap-3 px-4 py-3 transition ${
+                  isDark ? "hover:bg-[#3d1a26] text-[#F8BBD0]" : "hover:bg-[#FFF0F5] text-[#4A1528]"
+                }`}
+              >
+                <FaImages className={isDark ? "text-[#F48FB1]" : "text-[#C2185B]"} />
+                View updates
+              </button>
+            </div>
+          )}
+
+          {/* ── Loading spinner ── */}
+          {loading && (
+            <div className="flex justify-center items-center p-10">
+              <div className="w-8 h-8 rounded-full border-2 border-[#F8BBD0] border-t-[#C2185B] animate-spin" />
+            </div>
+          )}
+
+          {/* ── Other statuses ── */}
+          {!loading && otherStatuses.length > 0 && (
+            <div className="mx-4 mt-4">
+              <p
+                className={`text-xs font-semibold uppercase tracking-wider mb-2 px-1 ${
+                  isDark ? "text-[#7d3a50]" : "text-[#AD1457]/60"
+                }`}
+              >
+                Recent Updates
+              </p>
+              <div
+                className={`rounded-2xl border overflow-hidden ${
+                  isDark ? "bg-[#2d0f1c] border-[#3d1a26]" : "bg-white border-[#F8BBD0]"
+                }`}
+              >
+                {otherStatuses.map((contact, index) => (
                   <React.Fragment key={contact?.id}>
                     <StatusList
                       contact={contact}
@@ -320,111 +318,165 @@ const Status = () => {
                       theme={theme}
                     />
                     {index < otherStatuses.length - 1 && (
-                      <hr
-                        className={`${
-                          theme === "dark"
-                            ? "border-gray-700"
-                            : "border-gray-200"
-                        }`}
-                      />
+                      <div className={`mx-4 h-px ${isDark ? "bg-[#3d1a26]" : "bg-[#F8BBD0]"}`} />
                     )}
                   </React.Fragment>
-                );
-              })}
+                ))}
+              </div>
             </div>
           )}
-          {/* empty state  */}
+
+          {/* ── Empty state ── */}
           {!loading && statuses.length === 0 && (
-            <div className="flex flex-col items-center justify-center p-8 text-center">
+            <div className="flex flex-col items-center justify-center px-8 py-16 text-center">
               <div
-                className={`text-6xl mb-4 ${
-                  theme === "dark" ? "text-gray-600" : "text-gray-300"
+                className={`w-20 h-20 rounded-full flex items-center justify-center text-4xl mb-4 ${
+                  isDark ? "bg-[#2d0f1c]" : "bg-[#FCE4EC]"
                 }`}
               >
                 📱
               </div>
               <h3
-                className={`text-lg font-semibold mb-2 ${
-                  theme === "dark" ? "text-gray-400" : "text-gray-600"
+                className={`text-base font-semibold mb-1 ${
+                  isDark ? "text-[#F8BBD0]" : "text-[#880E4F]"
                 }`}
               >
-                No Updates yet
+                No updates yet
               </h3>
-              <p
-                className={`text-sm ${
-                  theme === "dark" ? "text-gray-500" : "text-gray-600"
-                }`}
-              >
-                Be the first to share an upate
+              <p className={`text-sm ${isDark ? "text-[#7d3a50]" : "text-[#AD1457]/60"}`}>
+                Be the first to share an update
               </p>
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="mt-5 px-5 py-2.5 bg-[#C2185B] hover:bg-[#AD1457] text-white text-sm font-medium rounded-xl transition shadow-md shadow-pink-300/20"
+              >
+                Add update
+              </button>
             </div>
           )}
         </div>
 
+        {/* ── Create status modal ── */}
         {showCreateModal && (
-          <div className="flex inset-0 bg-black bg-opacity-50 fixed items-center justify-center z-50">
-            <div
-              className={`p-6 rounded-lg max-w-md w-full mx-4 ${
-                theme === "dark" ? "bg-gray-800" : "bg-white"
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+              className={`w-full max-w-md rounded-2xl overflow-hidden shadow-2xl border ${
+                isDark
+                  ? "bg-[#1a0a10] border-[#3d1a26]"
+                  : "bg-white border-[#F8BBD0]"
               }`}
             >
-              <h3
-                className={`text-lg font-semibold  ${
-                  theme === "dark" ? "text-white" : "text-black"
+              {/* Modal header */}
+              <div
+                className={`flex items-center justify-between px-5 py-4 border-b ${
+                  isDark ? "border-[#3d1a26]" : "border-[#F8BBD0]"
                 }`}
               >
-                Create Status
-              </h3>
-              {filePreview && (
-                <div className="mb-4">
-                  {selectedFile?.type.startsWith("video/") ? (
-                    <video
-                      src={filePreview}
-                      controls
-                      className="w-full h-32 object-cover rounded"
-                    />
-                  ) : (
-                    <img
-                      src={filePreview}
-                      alt="file-preview"
-                      className="w-full h-32 object-cover rounded"
-                    />
-                  )}
+                <h3
+                  className={`text-base font-semibold ${
+                    isDark ? "text-[#F8BBD0]" : "text-[#880E4F]"
+                  }`}
+                >
+                  Create Update
+                </h3>
+                <button
+                  onClick={() => {
+                    setShowCreateModal(false);
+                    setNewStatus("");
+                    setSelectedFile(null);
+                    setFilePreview(null);
+                  }}
+                  className={`p-1.5 rounded-full transition ${
+                    isDark ? "hover:bg-[#2d0f1c] text-[#F48FB1]" : "hover:bg-[#FCE4EC] text-[#C2185B]"
+                  }`}
+                  aria-label="Close"
+                >
+                  <RxCross2 className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="p-5 space-y-4">
+                {/* File preview */}
+                {filePreview && (
+                  <div className="relative rounded-xl overflow-hidden">
+                    {selectedFile?.type.startsWith("video/") ? (
+                      <video src={filePreview} controls className="w-full max-h-48 object-cover" />
+                    ) : (
+                      <img src={filePreview} alt="preview" className="w-full max-h-48 object-cover" />
+                    )}
+                    <button
+                      onClick={() => { setSelectedFile(null); setFilePreview(null); }}
+                      className="absolute top-2 right-2 w-7 h-7 bg-[#C2185B] text-white rounded-full flex items-center justify-center shadow"
+                      aria-label="Remove file"
+                    >
+                      <RxCross2 className="w-3 h-3" />
+                    </button>
+                  </div>
+                )}
+
+                {/* Textarea */}
+                <textarea
+                  value={newStatus}
+                  onChange={(e) => setNewStatus(e.target.value)}
+                  placeholder="What's on your mind?"
+                  rows={3}
+                  className={`w-full px-4 py-3 rounded-xl text-sm border resize-none focus:outline-none focus:ring-2 focus:ring-[#C2185B]/30 transition ${
+                    isDark
+                      ? "bg-[#2d0f1c] border-[#3d1a26] text-[#F8BBD0] placeholder-[#7d3a50] focus:border-[#C2185B]"
+                      : "bg-[#FFF0F5] border-[#F8BBD0] text-[#4A1528] placeholder-[#F48FB1] focus:border-[#C2185B] focus:bg-white"
+                  }`}
+                />
+
+                {/* File input */}
+                <label
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border cursor-pointer transition text-sm ${
+                    isDark
+                      ? "border-[#3d1a26] hover:bg-[#2d0f1c] text-[#F48FB1]"
+                      : "border-[#F8BBD0] hover:bg-[#FFF0F5] text-[#C2185B]"
+                  }`}
+                >
+                  <FaImages className="w-4 h-4" />
+                  {selectedFile ? selectedFile.name : "Add photo or video"}
+                  <input
+                    type="file"
+                    accept="image/*,video/*"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                </label>
+
+                {/* Action buttons */}
+                <div className="flex gap-3 pt-1">
+                  <button
+                    onClick={() => {
+                      setShowCreateModal(false);
+                      setNewStatus("");
+                      setSelectedFile(null);
+                      setFilePreview(null);
+                    }}
+                    disabled={loading}
+                    className={`flex-1 py-2.5 rounded-xl text-sm font-medium border transition ${
+                      isDark
+                        ? "border-[#3d1a26] text-[#F48FB1] hover:bg-[#2d0f1c]"
+                        : "border-[#F8BBD0] text-[#C2185B] hover:bg-[#FFF0F5]"
+                    }`}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleCreateStatus}
+                    disabled={loading || (!newStatus.trim() && !selectedFile)}
+                    className="flex-1 py-2.5 rounded-xl text-sm font-medium bg-[#C2185B] hover:bg-[#AD1457] disabled:bg-[#F8BBD0] text-white transition"
+                  >
+                    {loading ? "Posting…" : "Post"}
+                  </button>
                 </div>
-              )}
-              <textarea
-                id="status"
-                name="status"
-                value={newStatus}
-                onChange={(e) => setNewStatus(e.target.value)}
-                placeholder="What's on your mind"
-                className={`w-full p-3 border rounded-lg mb-4 ${
-                  theme === "dark"
-                    ? "bg-gray-700 text-white border-gray-600"
-                    : "bg-white text-black border-gray-300"
-                }`}
-                rows={3}
-              />
-            <input type="file" accept="image/*,video/*" onChange={handleFileChange} className="mb-4"/>
-            <div className="flex justify-end space-x-3 ">
-              <button onClick={()=>{
-                setShowCreateModal(false);
-                setNewStatus("");
-                setSelectedFile(null);
-                setFilePreview(null);
-              }}
-              disabled={loading}
-              className="px-4 py-2 text-gray-500  hover:bg-red-500 hover:text-white rounded-md">
-                 Cancel
-              </button>
-              <button onClick={handleCreateStatus}
-                disabled={loading || (!newStatus.trim() && !selectedFile)}
-                className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50"
-              >
-                {loading ? "Creating" : "Create"}
-              </button>
-            </div>
-             </div>
+              </div>
+            </motion.div>
           </div>
         )}
       </motion.div>

@@ -3,7 +3,7 @@ import { useState, useRef } from "react";
 import useUserStore from "../../store/useUserStore";
 import useThemeStore from "../../store/useThemeStore";
 import chatStore from "../../store/useChatStore";
-import { isToday, isYesterday, format, set } from "date-fns";
+import { isToday, isYesterday, format } from "date-fns";
 import whatsapp_image from "../../images/whatsapp_image.png";
 import {
   FaArrowLeft,
@@ -20,9 +20,19 @@ import {
 import MessageBubble from "./MessageBubble";
 import EmojiPicker from "emoji-picker-react";
 
-const isValidate = (date) => {
-  return date instanceof Date && !isNaN(date);
-};
+const isValidate = (date) => date instanceof Date && !isNaN(date);
+
+const TypingDots = () => (
+  <span className="flex items-center gap-0.5 h-4">
+    {[0, 1, 2].map((i) => (
+      <span
+        key={i}
+        className="w-1.5 h-1.5 rounded-full bg-[#F48FB1] animate-bounce"
+        style={{ animationDelay: `${i * 0.15}s` }}
+      />
+    ))}
+  </span>
+);
 
 const ChatWindow = ({ selectedContact, setSelectedContact, isMobile }) => {
   const [message, setMessage] = useState("");
@@ -30,18 +40,10 @@ const ChatWindow = ({ selectedContact, setSelectedContact, isMobile }) => {
   const [showFileMenu, setShowFileMenu] = useState(false);
   const [filePreview, setFilePreview] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
-  const [rerender, setRerender] = useState(false);
   const typingTimeOutRef = useRef(null);
   const messageEndRef = useRef(null);
   const emojiPickerRef = useRef(null);
   const fileInputRef = useRef(null);
-  // const setSelectedContact = useLayoutStore(
-  //   (state) => state.setSelectedContact
-  // );
-  // const selectedContact = useLayoutStore((state) => state.selectedContact);
-  // const selectedContact = useLayoutStore(
-  //   (state) => state.selectedContact
-  // );
 
   const { theme } = useThemeStore();
   const { currentUser } = useUserStore();
@@ -49,7 +51,6 @@ const ChatWindow = ({ selectedContact, setSelectedContact, isMobile }) => {
     messages,
     loading,
     sendMessage,
-    receiveMessage,
     fetchConversations,
     fetchMessages,
     conversations,
@@ -60,9 +61,9 @@ const ChatWindow = ({ selectedContact, setSelectedContact, isMobile }) => {
     isOnline,
     addReaction,
     deleteMessage,
-    cleanup,
   } = chatStore();
-  //get online Status and lastSeen
+
+  const isDark = theme === "dark";
   const online = isOnline(selectedContact?._id);
   const lastSeen = getUserLastSeen(selectedContact?._id);
   const isTyping = isUserTyping(selectedContact?._id);
@@ -72,9 +73,7 @@ const ChatWindow = ({ selectedContact, setSelectedContact, isMobile }) => {
       const conversation = conversations?.data?.find((conv) =>
         conv.participants.some((p) => p._id === selectedContact?._id)
       );
-      if (conversation?._id) {
-        fetchMessages(conversation._id);
-      }
+      if (conversation?._id) fetchMessages(conversation._id);
     }
   }, [selectedContact?._id, conversations?.data]);
 
@@ -82,29 +81,20 @@ const ChatWindow = ({ selectedContact, setSelectedContact, isMobile }) => {
     fetchConversations();
   }, [fetchConversations]);
 
-  const scrollToBottom = () => {
-    messageEndRef.current?.scrollIntoView({ behavior: "auto" });
-  };
   useEffect(() => {
-    scrollToBottom();
+    messageEndRef.current?.scrollIntoView({ behavior: "auto" });
   }, [messages]);
 
   useEffect(() => {
     if (message && selectedContact) {
       startTyping(selectedContact?._id);
-
-      if (typingTimeOutRef.current) {
-        clearTimeout(typingTimeOutRef.current);
-      }
-
+      if (typingTimeOutRef.current) clearTimeout(typingTimeOutRef.current);
       typingTimeOutRef.current = setTimeout(() => {
         stopTyping(selectedContact?._id);
       }, 2000);
     }
     return () => {
-      if (typingTimeOutRef.current) {
-        clearTimeout(typingTimeOutRef.current);
-      }
+      if (typingTimeOutRef.current) clearTimeout(typingTimeOutRef.current);
     };
   }, [message, selectedContact, startTyping, stopTyping]);
 
@@ -121,24 +111,15 @@ const ChatWindow = ({ selectedContact, setSelectedContact, isMobile }) => {
 
   const handleSendMessage = async () => {
     if (!selectedContact) return;
-    setFilePreview(null);
     try {
       const formData = new FormData();
       formData.append("senderId", currentUser._id);
-      console.log("SenderId", currentUser._id);
       formData.append("receiverId", selectedContact._id);
-
-      const status = online ? "delivered" : "send";
-      formData.append("messageStatus", status);
-      if (message.trim()) {
-        formData.append("content", message.trim());
-      }
-      if (selectedFile) {
-        formData.append("media", selectedFile, selectedFile.name);
-      }
+      formData.append("messageStatus", online ? "delivered" : "send");
+      if (message.trim()) formData.append("content", message.trim());
+      if (selectedFile) formData.append("media", selectedFile, selectedFile.name);
       if (!message.trim() && !selectedFile) return;
       await sendMessage(formData);
-      //clear state
       setMessage("");
       setSelectedFile(null);
       setShowFileMenu(false);
@@ -150,182 +131,231 @@ const ChatWindow = ({ selectedContact, setSelectedContact, isMobile }) => {
 
   const renderDateSeparator = (date) => {
     if (!isValidate(date)) return null;
-    let dateString;
-    if (isToday(date)) {
-      dateString = "Today";
-    } else if (isYesterday(date)) {
-      dateString = "Yesterday";
-    } else {
-      dateString = format(date, "EEEE, MMMM d");
-    }
+    const label = isToday(date)
+      ? "Today"
+      : isYesterday(date)
+      ? "Yesterday"
+      : format(date, "EEEE, MMMM d");
     return (
       <div className="flex justify-center my-4">
         <span
-          className={`px-4 py-2 rounded-full text-sm ${
-            theme === "dark"
-              ? "bg-gray-700 text-gray-300"
-              : "bg-gray-200 text-gray-600"
+          className={`px-4 py-1.5 rounded-full text-xs font-medium ${
+            isDark
+              ? "bg-[#3d1a26] text-[#F8BBD0]"
+              : "bg-[#FCE4EC] text-[#AD1457]"
           }`}
         >
-          {dateString}
+          {label}
         </span>
       </div>
     );
   };
 
-  //Grouping of message
   const groupedMessages = Array.isArray(messages)
-    ? messages.reduce((acc, message) => {
-        if (!message.createdAt) return acc;
-        const date = new Date(message.createdAt);
+    ? messages.reduce((acc, msg) => {
+        if (!msg.createdAt) return acc;
+        const date = new Date(msg.createdAt);
         if (isValidate(date)) {
-          const dateString = format(date, "yyyy-MM-dd");
-          if (!acc[dateString]) {
-            acc[dateString] = [];
-          }
-          acc[dateString].push(message);
-        } else {
-          console.error("Invalid date in message :", message);
+          const key = format(date, "yyyy-MM-dd");
+          if (!acc[key]) acc[key] = [];
+          acc[key].push(msg);
         }
         return acc;
       }, {})
     : {};
 
   const handleReaction = (messageId, emoji) => {
-    console.log("Inside ChatWindow");
     addReaction(messageId, emoji);
   };
+
+  // ── Empty state ─────────────────────────────────────────────────────────
   if (!selectedContact && !isMobile) {
     return (
-      <div className="flex-1 flex flex-col justify-center items-center mx-auto h-screen text-center w-full">
-        <div className="max-w-md">
-          <img src={whatsapp_image} alt="Image" className="w-full h-auto " />
-          <h2
-            className={`text-3xl font-semibold mb-4 ${
-              theme === "dark" ? "text-white" : "text-black"
-            } mb-6`}
+      <div
+        className={`flex-1 flex flex-col justify-center items-center h-screen text-center ${
+          isDark ? "bg-[#120508]" : "bg-[#FFF0F5]"
+        }`}
+      >
+        <div className="max-w-sm px-6">
+          <div
+            className={`w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 ${
+              isDark ? "bg-[#2d0f1c]" : "bg-[#FCE4EC]"
+            }`}
           >
-            Select a conversation to start chatting
+            <img
+              src={whatsapp_image}
+              alt="Chat"
+              className="w-14 h-14 object-contain"
+            />
+          </div>
+          <h2
+            className={`text-2xl font-semibold mb-3 ${
+              isDark ? "text-[#F8BBD0]" : "text-[#880E4F]"
+            }`}
+          >
+            Start a conversation
           </h2>
           <p
-            className={`${
-              theme === "dark" ? "text-gray-400" : "text-gray-600"
-            } mb-6`}
+            className={`text-sm leading-relaxed mb-8 ${
+              isDark ? "text-[#7d3a50]" : "text-[#AD1457]/70"
+            }`}
           >
-            Choose a contact from the list on the left to begin chat.
+            Choose a contact from the list to begin chatting.
           </p>
-          <p
-            className={`${
-              theme === "dark" ? "text-gray-400" : "text-gray-600"
-            } text-sm mt-8 flex items-center justify-center gap-2 `}
+          <div
+            className={`flex items-center justify-center gap-2 text-xs ${
+              isDark ? "text-[#7d3a50]" : "text-[#AD1457]/50"
+            }`}
           >
-            <FaLock className="h-4 w-4" />
-            Your personal messages are end to end encrypted.
-          </p>
+            <FaLock className="w-3 h-3" />
+            Your messages are end-to-end encrypted
+          </div>
         </div>
       </div>
     );
   }
+
+  // ── Chat view ────────────────────────────────────────────────────────────
   if (selectedContact) {
     return (
-      <div className="flex-1 h-screen w-full flex flex-col">
+      <div
+        className={`flex-1 h-screen w-full flex flex-col ${
+          isDark ? "bg-[#120508]" : "bg-[#FFF0F5]"
+        }`}
+      >
+        {/* Header */}
         <div
-          className={`p-4 ${
-            theme === "dark"
-              ? "bg-[#303430] text-white"
-              : "bg-[rgb(239,242,245)] text-gray-600"
-          } flex items-center`}
+          className={`px-4 py-3 flex items-center gap-3 border-b ${
+            isDark
+              ? "bg-[#1a0a10] border-[#3d1a26]"
+              : "bg-white border-[#F8BBD0]"
+          }`}
         >
-          <button
-            className="mr-2 focus:outline-none"
-            onClick={() => {
-              setSelectedContact(null);
-            }}
-          >
-            <FaArrowLeft className="h-6 w-6" />
-          </button>
-          <img
-            src={
-              selectedContact?.profilePicture
-                ? selectedContact?.profilePicture
-                : "https://api.dicebear.com/6.x/avataaars/svg?seed=Felix"
-            }
-            alt={selectedContact?.username}
-            className="w-10 h-10 rounded-full"
-          />
-          <div className="ml-3 flex-grow font-semibold text-start">
-            <h2>{selectedContact?.username}</h2>
-            {isTyping ? (
-              <div>Typing...</div>
-            ) : (
-              <p
-                className={`text-sm ${
-                  theme === "dark" ? "text-gray-400" : "text-gray-600"
-                }`}
-              >
-                {online
-                  ? "Online"
-                  : selectedContact?.lastSeen
-                  ? `Last seen ${format(
-                      new Date(selectedContact?.lastSeen),
-                      "HH:mm"
-                    )}`
-                  : "Offline"}
-              </p>
+          {isMobile && (
+            <button
+              onClick={() => setSelectedContact(null)}
+              className={`p-2 rounded-full transition ${
+                isDark ? "hover:bg-[#2d0f1c] text-[#F8BBD0]" : "hover:bg-[#FCE4EC] text-[#880E4F]"
+              }`}
+              aria-label="Back"
+            >
+              <FaArrowLeft className="w-4 h-4" />
+            </button>
+          )}
+
+          <div className="relative flex-shrink-0">
+            <img
+              src={
+                selectedContact?.profilePicture ||
+                "https://api.dicebear.com/6.x/avataaars/svg?seed=Felix"
+              }
+              alt={selectedContact?.username}
+              className="w-10 h-10 rounded-full object-cover border-2 border-[#F48FB1]"
+            />
+            {online && (
+              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-400 border-2 border-white rounded-full" />
             )}
           </div>
-          <div className="flex items-center space-x-4">
-            <button className="focus:outline-none">
-              <FaVideo className="h-5 w-5" />
+
+          <div className="flex-1 min-w-0">
+            <h2
+              className={`font-semibold text-sm truncate ${
+                isDark ? "text-[#F8BBD0]" : "text-[#880E4F]"
+              }`}
+            >
+              {selectedContact?.username}
+            </h2>
+            <p className={`text-xs ${isDark ? "text-[#7d3a50]" : "text-[#AD1457]/70"}`}>
+              {isTyping ? (
+                <span className="flex items-center gap-1.5">
+                  <TypingDots /> typing...
+                </span>
+              ) : online ? (
+                "Online"
+              ) : selectedContact?.lastSeen ? (
+                `Last seen ${format(new Date(selectedContact.lastSeen), "HH:mm")}`
+              ) : (
+                "Offline"
+              )}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-1">
+            <button
+              className={`p-2 rounded-full transition ${
+                isDark
+                  ? "hover:bg-[#2d0f1c] text-[#F48FB1]"
+                  : "hover:bg-[#FCE4EC] text-[#C2185B]"
+              }`}
+              aria-label="Video call"
+            >
+              <FaVideo className="w-4 h-4" />
             </button>
-            <button className="focus:outline-none">
-              <FaEllipsisV className="h-5 w-5" />
+            <button
+              className={`p-2 rounded-full transition ${
+                isDark
+                  ? "hover:bg-[#2d0f1c] text-[#F48FB1]"
+                  : "hover:bg-[#FCE4EC] text-[#C2185B]"
+              }`}
+              aria-label="More options"
+            >
+              <FaEllipsisV className="w-4 h-4" />
             </button>
           </div>
         </div>
 
+        {/* Messages area */}
         <div
-          className={`flex-1 p-4 overflow-y-auto ${
-            theme === "dark" ? "bg-[#191a1a]" : "bg-[rgb(241,236,229)]"
+          className={`flex-1 px-4 py-3 overflow-y-auto space-y-1 ${
+            isDark ? "bg-[#120508]" : "bg-[#FFF0F5]"
           }`}
+          style={{
+            backgroundImage: isDark
+              ? "radial-gradient(circle at 20% 80%, rgba(194,24,91,0.04) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(244,143,177,0.04) 0%, transparent 50%)"
+              : "radial-gradient(circle at 20% 80%, rgba(252,228,236,0.6) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(248,187,208,0.4) 0%, transparent 50%)",
+          }}
         >
-          {Object.entries(groupedMessages).map(([date, msgs]) => {
-            return (
-              <React.Fragment key={date}>
-                {renderDateSeparator(new Date(date))}
-                {msgs
-                  .filter(
-                    (msg) =>
-                      msg.conversation === selectedContact?.conversation?._id
-                  )
-                  .map((msg) => (
-                    <MessageBubble
-                      key={msg._id || msg.tempId}
-                      message={msg}
-                      theme={theme}
-                      currentUser={currentUser}
-                      onReact={handleReaction}
-                      deleteMessage={deleteMessage}
-                    />
-                  ))}
-              </React.Fragment>
-            );
-          })}
+          {Object.entries(groupedMessages).map(([date, msgs]) => (
+            <React.Fragment key={date}>
+              {renderDateSeparator(new Date(date))}
+              {msgs
+                .filter(
+                  (msg) =>
+                    msg.conversation === selectedContact?.conversation?._id
+                )
+                .map((msg) => (
+                  <MessageBubble
+                    key={msg._id || msg.tempId}
+                    message={msg}
+                    theme={theme}
+                    currentUser={currentUser}
+                    onReact={handleReaction}
+                    deleteMessage={deleteMessage}
+                  />
+                ))}
+            </React.Fragment>
+          ))}
           <div ref={messageEndRef} />
         </div>
+
+        {/* File preview */}
         {filePreview && (
-          <div className="relative p-2 ">
-            {selectedFile?.type.startsWith("video/*") ? (
+          <div
+            className={`px-4 py-3 border-t relative flex justify-center ${
+              isDark ? "bg-[#1a0a10] border-[#3d1a26]" : "bg-white border-[#F8BBD0]"
+            }`}
+          >
+            {selectedFile?.type.startsWith("video/") ? (
               <video
                 src={filePreview}
                 controls
-                className="w-80 object-cover rounded shadow-lg mx-auto"
+                className="max-h-40 rounded-xl object-cover shadow"
               />
             ) : (
               <img
                 src={filePreview}
-                alt="file-preview"
-                className="w-80 object-cover rounded shadow-lg mx-auto"
+                alt="preview"
+                className="max-h-40 rounded-xl object-cover shadow"
               />
             )}
             <button
@@ -333,32 +363,38 @@ const ChatWindow = ({ selectedContact, setSelectedContact, isMobile }) => {
                 setSelectedFile(null);
                 setFilePreview(null);
               }}
-              className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full p-1"
+              className="absolute top-2 right-4 bg-[#C2185B] hover:bg-[#AD1457] text-white rounded-full p-1.5 shadow"
+              aria-label="Remove file"
             >
-              <FaTimes className="h-4 w-4" />
+              <FaTimes className="w-3 h-3" />
             </button>
           </div>
         )}
+
+        {/* Input bar */}
         <div
-          className={`p-4 ${
-            theme === "dark" ? "bg-[#303430]" : "bg-white"
-          } flex items-center space-x-2 relative`}
+          className={`px-4 py-3 border-t flex items-center gap-2 relative ${
+            isDark
+              ? "bg-[#1a0a10] border-[#3d1a26]"
+              : "bg-white border-[#F8BBD0]"
+          }`}
         >
+          {/* Emoji */}
           <button
-            onClick={() => {
-              setShowEmojiPicker(!showEmojiPicker);
-            }}
+            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+            className={`p-2 rounded-full flex-shrink-0 transition ${
+              isDark
+                ? "hover:bg-[#2d0f1c] text-[#F48FB1]"
+                : "hover:bg-[#FCE4EC] text-[#F48FB1]"
+            }`}
+            aria-label="Emoji"
           >
-            <FaSmile
-              className={`h-6 w-6 ${
-                theme === "dark" ? "text-gray-400 " : "text-gray-500"
-              }`}
-            />
+            <FaSmile className="w-5 h-5" />
           </button>
           {showEmojiPicker && (
             <div
               ref={emojiPickerRef}
-              className="absolute left-0 bottom-16 z-50"
+              className="absolute left-2 bottom-16 z-50 shadow-xl rounded-2xl overflow-hidden"
             >
               <EmojiPicker
                 onEmojiClick={(emojiObject) => {
@@ -368,24 +404,27 @@ const ChatWindow = ({ selectedContact, setSelectedContact, isMobile }) => {
               />
             </div>
           )}
-          <div className="relative">
+
+          {/* Attachment */}
+          <div className="relative flex-shrink-0">
             <button
-              onClick={() => {
-                setShowFileMenu(!showFileMenu);
-              }}
-              className="focus:outline-none"
+              onClick={() => setShowFileMenu(!showFileMenu)}
+              className={`p-2 rounded-full transition ${
+                isDark
+                  ? "hover:bg-[#2d0f1c] text-[#F48FB1]"
+                  : "hover:bg-[#FCE4EC] text-[#F48FB1]"
+              }`}
+              aria-label="Attach file"
             >
-              <FaPaperclip
-                className={`h-6 w-6 ${
-                  theme === "dark" ? "text-gray-400" : "text-gray-500"
-                } mt-2`}
-              />
+              <FaPaperclip className="w-5 h-5" />
             </button>
             {showFileMenu && (
               <div
-                className={`absolute bottom-full left-0 mb-2 ${
-                  theme === "dark" ? "bg-gray-700" : "bg-white"
-                } rounded-lg shadow-lg`}
+                className={`absolute bottom-full left-0 mb-2 rounded-xl shadow-lg overflow-hidden border text-sm ${
+                  isDark
+                    ? "bg-[#2d0f1c] border-[#3d1a26] text-[#F8BBD0]"
+                    : "bg-white border-[#F8BBD0] text-[#4A1528]"
+                }`}
               >
                 <input
                   type="file"
@@ -395,29 +434,28 @@ const ChatWindow = ({ selectedContact, setSelectedContact, isMobile }) => {
                   className="hidden"
                 />
                 <button
-                  onClick={() => {
-                    fileInputRef.current?.click();
-                  }}
-                  className={`flex items-center px-4 py-2 w-full transition-colors ${
-                    theme === "dark" ? "hover:bg-gray-500" : "hover:bg-gray-100"
+                  onClick={() => fileInputRef.current?.click()}
+                  className={`flex items-center gap-2 px-4 py-2.5 w-full transition ${
+                    isDark ? "hover:bg-[#3d1a26]" : "hover:bg-[#FFF0F5]"
                   }`}
                 >
-                  <FaImage className="mr-2" /> Image/Video
+                  <FaImage className="text-[#F48FB1]" /> Image / Video
                 </button>
                 <button
-                  onClick={() => {
-                    fileInputRef.current?.click();
-                  }}
-                  className={`flex items-center px-4 py-2 w-full transition-colors ${
-                    theme === "dark" ? "hover:bg-gray-500" : "hover:bg-gray-100"
+                  onClick={() => fileInputRef.current?.click()}
+                  className={`flex items-center gap-2 px-4 py-2.5 w-full transition border-t ${
+                    isDark
+                      ? "hover:bg-[#3d1a26] border-[#3d1a26]"
+                      : "hover:bg-[#FFF0F5] border-[#F8BBD0]"
                   }`}
                 >
-                  <FaFile className="mr-2" /> Document
+                  <FaFile className="text-[#F48FB1]" /> Document
                 </button>
               </div>
             )}
           </div>
 
+          {/* Text input */}
           <input
             type="text"
             value={message}
@@ -425,16 +463,22 @@ const ChatWindow = ({ selectedContact, setSelectedContact, isMobile }) => {
             onKeyDown={(e) => {
               if (e.key === "Enter") handleSendMessage();
             }}
-            placeholder="Type a Message"
-            className={`flex-grow px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-pink-400
-          ${
-            theme === "dark"
-              ? "bg-gray-700 text-white border-gray-600"
-              : "bg-white text-black border-gray-300"
-          }`}
+            placeholder="Type a message..."
+            className={`flex-1 px-4 py-2.5 rounded-xl text-sm border focus:outline-none focus:ring-2 focus:ring-[#C2185B]/30 transition ${
+              isDark
+                ? "bg-[#2d0f1c] border-[#3d1a26] text-[#F8BBD0] placeholder-[#7d3a50] focus:border-[#C2185B]"
+                : "bg-[#FFF0F5] border-[#F8BBD0] text-[#4A1528] placeholder-[#F48FB1] focus:border-[#C2185B] focus:bg-white"
+            }`}
           />
-          <button onClick={handleSendMessage} className="focus:outline-none">
-            <FaPaperPlane className="h-6 w-6 text-pink-400" />
+
+          {/* Send */}
+          <button
+            onClick={handleSendMessage}
+            disabled={!message.trim() && !selectedFile}
+            className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-xl bg-[#C2185B] hover:bg-[#AD1457] disabled:bg-[#F8BBD0] active:scale-95 transition-all shadow-md shadow-pink-300/30"
+            aria-label="Send message"
+          >
+            <FaPaperPlane className="w-4 h-4 text-white" />
           </button>
         </div>
       </div>
