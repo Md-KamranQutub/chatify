@@ -231,7 +231,7 @@ const ChatWindow = ({ selectedContact, setSelectedContact, isMobile }) => {
               : "bg-white border-[#F8BBD0]"
           }`}
         >
-          {isMobile && (
+          
             <button
               onClick={() => setSelectedContact(null)}
               className={`p-2 rounded-full transition ${
@@ -241,7 +241,6 @@ const ChatWindow = ({ selectedContact, setSelectedContact, isMobile }) => {
             >
               <FaArrowLeft className="w-4 h-4" />
             </button>
-          )}
 
           <div className="relative flex-shrink-0">
             <img
