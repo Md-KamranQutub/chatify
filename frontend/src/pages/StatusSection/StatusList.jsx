@@ -18,7 +18,7 @@ const StatusList = ({ contact, onPreview, theme }) => {
                 cy="50"
                 r="48"
                 fill="none"
-                stroke="#25D366"
+                stroke="#C2185B"
                 strokeWidth="4"
                 transform={`rotate(-90 50 50)`}
               />
